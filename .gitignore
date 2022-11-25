@@ -1,0 +1,5 @@
+vendor/
+build/coverage-report/
+composer.lock
+.phpunit.result.cache
+.idea
