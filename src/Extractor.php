@@ -223,7 +223,7 @@ final class Extractor implements \ArrayAccess, \IteratorAggregate
      * @api
      * @return int|float|null
      */
-    public function intOrfloatOrNull(): int|float|null
+    public function intOrFloatOrNull(): int|float|null
     {
         if ($this->data === null || is_int($this->data) || is_float($this->data)) {
             return $this->data;
