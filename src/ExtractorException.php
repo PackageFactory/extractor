@@ -32,13 +32,18 @@ final class ExtractorException extends \Exception
 {
     /**
      * @param (int|string)[] $path
-     * @param string $message
+     * @param string $rawMessage
      */
     private function __construct(
         private readonly array $path,
-        string $message
+        private readonly string $rawMessage
     ) {
-        parent::__construct($message, 1669042598);
+        parent::__construct(
+            $path
+            ? sprintf('Extraction failed at path "%s": %s', implode('.', $path), $rawMessage)
+            : sprintf('Extraction failed: %s', $rawMessage),
+            1669042598
+        );
     }
 
     /**
@@ -50,12 +55,23 @@ final class ExtractorException extends \Exception
     }
 
     /**
+     * @return string
+     */
+    public function getRawMessage(): string
+    {
+        return $this->rawMessage;
+    }
+
+    /**
      * @param (int|string)[] $path
      * @return self
      */
     public static function becauseDataIsRequiredButNullWasPassed(array $path): self
     {
-        return new self($path, 'Value is required, but was null.');
+        return new self(
+            path: $path,
+            rawMessage: 'Value is required, but was null.'
+        );
     }
 
     /**
@@ -72,7 +88,7 @@ final class ExtractorException extends \Exception
     ): self {
         return new self(
             path: $path,
-            message: sprintf(
+            rawMessage: sprintf(
                 '%s was expected to be of type %s, got %s instead.',
                 $isKey ? 'Key' : 'Value',
                 $expectedType,

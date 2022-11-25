@@ -201,11 +201,32 @@ final class ExtractorArrayAccessTest extends TestCase
         $this->expectException(ExtractorException::class);
 
         try {
-            $extractor = Extractor::for([]);
-            $extractor['foo']['bar']['baz']->array();
+            $extractor = Extractor::for(['foo' => ['bar' => ['baz' => 42]]]);
+            $extractor['foo']['bar']['baz']->string();
         } catch (ExtractorException $e) {
             $this->assertEquals(
                 ['foo', 'bar', 'baz'],
+                $e->getPath()
+            );
+
+            throw $e;
+        }
+    }
+
+    /**
+     * @test
+     * @return void
+     */
+    public function onlyKeepsTrackOfPathUntilFirstNullValueWasEncountered(): void
+    {
+        $this->expectException(ExtractorException::class);
+
+        try {
+            $extractor = Extractor::for(['foo' => ['bar' => null]]);
+            $extractor['foo']['bar']['baz']->array();
+        } catch (ExtractorException $e) {
+            $this->assertEquals(
+                ['foo', 'bar'],
                 $e->getPath()
             );
 

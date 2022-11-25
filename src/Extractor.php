@@ -34,11 +34,14 @@ final class Extractor implements \ArrayAccess, \IteratorAggregate
 {
     /**
      * @param null|boolean|integer|float|string|array<mixed> $data
-     * @param (int|string)[] $path
+     * @param (int|string)[] $pathUntilFirstNullEncounter
+     * @param (int|string)[] $entireAccessPath
+     * @param bool $isKey
      */
     private function __construct(
         private readonly null|bool|int|float|string|array $data,
-        private readonly array $path,
+        private readonly array $pathUntilFirstNullEncounter,
+        private readonly array $entireAccessPath,
         private readonly bool $isKey
     ) {
     }
@@ -49,7 +52,7 @@ final class Extractor implements \ArrayAccess, \IteratorAggregate
      */
     public static function for(null|bool|int|float|string|array $data): self
     {
-        return new self($data, [], false);
+        return new self($data, [], [], false);
     }
 
     /**
@@ -57,7 +60,12 @@ final class Extractor implements \ArrayAccess, \IteratorAggregate
      */
     private function forKey(int|string $key): self
     {
-        return new self($key, [...$this->path, $key], true);
+        return new self(
+            data: $key,
+            pathUntilFirstNullEncounter: [...$this->entireAccessPath, $key],
+            entireAccessPath: [...$this->entireAccessPath, $key],
+            isKey: true
+        );
     }
 
     /**
@@ -66,7 +74,7 @@ final class Extractor implements \ArrayAccess, \IteratorAggregate
      */
     public function getPath(): array
     {
-        return $this->path;
+        return $this->entireAccessPath;
     }
 
     /**
@@ -76,7 +84,7 @@ final class Extractor implements \ArrayAccess, \IteratorAggregate
     public function bool(): bool
     {
         if ($this->data === null) {
-            throw ExtractorException::becauseDataIsRequiredButNullWasPassed($this->path);
+            throw ExtractorException::becauseDataIsRequiredButNullWasPassed($this->pathUntilFirstNullEncounter);
         }
 
         if (is_bool($this->data)) {
@@ -84,7 +92,7 @@ final class Extractor implements \ArrayAccess, \IteratorAggregate
         }
 
         throw ExtractorException::becauseDataDidNotMatchExpectedType(
-            path: $this->path,
+            path: $this->pathUntilFirstNullEncounter,
             expectedType: 'bool',
             attemptedData: $this->data,
             isKey: $this->isKey
@@ -102,7 +110,7 @@ final class Extractor implements \ArrayAccess, \IteratorAggregate
         }
 
         throw ExtractorException::becauseDataDidNotMatchExpectedType(
-            path: $this->path,
+            path: $this->pathUntilFirstNullEncounter,
             expectedType: 'bool or null',
             attemptedData: $this->data,
             isKey: $this->isKey
@@ -116,7 +124,7 @@ final class Extractor implements \ArrayAccess, \IteratorAggregate
     public function int(): int
     {
         if ($this->data === null) {
-            throw ExtractorException::becauseDataIsRequiredButNullWasPassed($this->path);
+            throw ExtractorException::becauseDataIsRequiredButNullWasPassed($this->pathUntilFirstNullEncounter);
         }
 
         if (is_int($this->data)) {
@@ -124,7 +132,7 @@ final class Extractor implements \ArrayAccess, \IteratorAggregate
         }
 
         throw ExtractorException::becauseDataDidNotMatchExpectedType(
-            path: $this->path,
+            path: $this->pathUntilFirstNullEncounter,
             expectedType: 'int',
             attemptedData: $this->data,
             isKey: $this->isKey
@@ -142,7 +150,7 @@ final class Extractor implements \ArrayAccess, \IteratorAggregate
         }
 
         throw ExtractorException::becauseDataDidNotMatchExpectedType(
-            path: $this->path,
+            path: $this->pathUntilFirstNullEncounter,
             expectedType: 'int or null',
             attemptedData: $this->data,
             isKey: $this->isKey
@@ -156,7 +164,7 @@ final class Extractor implements \ArrayAccess, \IteratorAggregate
     public function float(): float
     {
         if ($this->data === null) {
-            throw ExtractorException::becauseDataIsRequiredButNullWasPassed($this->path);
+            throw ExtractorException::becauseDataIsRequiredButNullWasPassed($this->pathUntilFirstNullEncounter);
         }
 
         if (is_float($this->data)) {
@@ -164,7 +172,7 @@ final class Extractor implements \ArrayAccess, \IteratorAggregate
         }
 
         throw ExtractorException::becauseDataDidNotMatchExpectedType(
-            path: $this->path,
+            path: $this->pathUntilFirstNullEncounter,
             expectedType: 'float',
             attemptedData: $this->data,
             isKey: $this->isKey
@@ -182,7 +190,7 @@ final class Extractor implements \ArrayAccess, \IteratorAggregate
         }
 
         throw ExtractorException::becauseDataDidNotMatchExpectedType(
-            path: $this->path,
+            path: $this->pathUntilFirstNullEncounter,
             expectedType: 'float or null',
             attemptedData: $this->data,
             isKey: $this->isKey
@@ -196,7 +204,7 @@ final class Extractor implements \ArrayAccess, \IteratorAggregate
     public function intOrFloat(): int|float
     {
         if ($this->data === null) {
-            throw ExtractorException::becauseDataIsRequiredButNullWasPassed($this->path);
+            throw ExtractorException::becauseDataIsRequiredButNullWasPassed($this->pathUntilFirstNullEncounter);
         }
 
         if (is_int($this->data) || is_float($this->data)) {
@@ -204,7 +212,7 @@ final class Extractor implements \ArrayAccess, \IteratorAggregate
         }
 
         throw ExtractorException::becauseDataDidNotMatchExpectedType(
-            path: $this->path,
+            path: $this->pathUntilFirstNullEncounter,
             expectedType: 'int or float',
             attemptedData: $this->data,
             isKey: $this->isKey
@@ -222,7 +230,7 @@ final class Extractor implements \ArrayAccess, \IteratorAggregate
         }
 
         throw ExtractorException::becauseDataDidNotMatchExpectedType(
-            path: $this->path,
+            path: $this->pathUntilFirstNullEncounter,
             expectedType: 'int or float or null',
             attemptedData: $this->data,
             isKey: $this->isKey
@@ -236,7 +244,7 @@ final class Extractor implements \ArrayAccess, \IteratorAggregate
     public function string(): string
     {
         if ($this->data === null) {
-            throw ExtractorException::becauseDataIsRequiredButNullWasPassed($this->path);
+            throw ExtractorException::becauseDataIsRequiredButNullWasPassed($this->pathUntilFirstNullEncounter);
         }
 
         if (is_string($this->data)) {
@@ -244,7 +252,7 @@ final class Extractor implements \ArrayAccess, \IteratorAggregate
         }
 
         throw ExtractorException::becauseDataDidNotMatchExpectedType(
-            path: $this->path,
+            path: $this->pathUntilFirstNullEncounter,
             expectedType: 'string',
             attemptedData: $this->data,
             isKey: $this->isKey
@@ -262,7 +270,7 @@ final class Extractor implements \ArrayAccess, \IteratorAggregate
         }
 
         throw ExtractorException::becauseDataDidNotMatchExpectedType(
-            path: $this->path,
+            path: $this->pathUntilFirstNullEncounter,
             expectedType: 'string or null',
             attemptedData: $this->data,
             isKey: $this->isKey
@@ -276,7 +284,7 @@ final class Extractor implements \ArrayAccess, \IteratorAggregate
     public function array(): array
     {
         if ($this->data === null) {
-            throw ExtractorException::becauseDataIsRequiredButNullWasPassed($this->path);
+            throw ExtractorException::becauseDataIsRequiredButNullWasPassed($this->pathUntilFirstNullEncounter);
         }
 
         if (is_array($this->data)) {
@@ -284,7 +292,7 @@ final class Extractor implements \ArrayAccess, \IteratorAggregate
         }
 
         throw ExtractorException::becauseDataDidNotMatchExpectedType(
-            path: $this->path,
+            path: $this->pathUntilFirstNullEncounter,
             expectedType: 'array',
             attemptedData: $this->data,
             isKey: $this->isKey
@@ -302,7 +310,7 @@ final class Extractor implements \ArrayAccess, \IteratorAggregate
         }
 
         throw ExtractorException::becauseDataDidNotMatchExpectedType(
-            path: $this->path,
+            path: $this->pathUntilFirstNullEncounter,
             expectedType: 'array or null',
             attemptedData: $this->data,
             isKey: $this->isKey
@@ -327,14 +335,29 @@ final class Extractor implements \ArrayAccess, \IteratorAggregate
     public function offsetGet(mixed $offset): mixed
     {
         if ($this->data === null) {
-            return new self(null, [...$this->path, $offset], false);
+            return new self(
+                data: null,
+                pathUntilFirstNullEncounter: $this->pathUntilFirstNullEncounter,
+                entireAccessPath: [...$this->entireAccessPath, $offset],
+                isKey: false
+            );
         }
 
         $data = $this->array();
 
         return array_key_exists($offset, $data)
-            ? new self($data[$offset], [...$this->path, $offset], false)
-            : new self(null, [...$this->path, $offset], false);
+            ? new self(
+                data: $data[$offset],
+                pathUntilFirstNullEncounter: [...$this->entireAccessPath, $offset],
+                entireAccessPath: [...$this->entireAccessPath, $offset],
+                isKey: false
+            )
+            : new self(
+                data: null,
+                pathUntilFirstNullEncounter: [...$this->entireAccessPath, $offset],
+                entireAccessPath: [...$this->entireAccessPath, $offset],
+                isKey: false
+            );
     }
 
     /**
@@ -378,7 +401,12 @@ final class Extractor implements \ArrayAccess, \IteratorAggregate
     {
         if ($this->data !== null) {
             foreach ($this->array() as $key => $value) {
-                yield $this->forKey($key) => new self($value, [...$this->path, $key], false);
+                yield $this->forKey($key) => new self(
+                    data: $value,
+                    pathUntilFirstNullEncounter: [...$this->entireAccessPath, $key],
+                    entireAccessPath: [...$this->entireAccessPath, $key],
+                    isKey: false
+                );
             }
         }
     }
