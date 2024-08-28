@@ -1,3 +1,7 @@
+> [!NOTE]
+> This repository is archived, but the project is not. Development continues over here:
+> https://codeberg.org/PackageFactory/extractor
+
 # PackageFactory.Extractor
 
 > A fluent interface that allows to validate primitive PHP data structures while also reading them
